@@ -42,28 +42,38 @@ export const POST = async (request) => {
 export const DELETE = async (request) => {
   const payload = checkToken();
 
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Invalid token",
-  //   },
-  //   { status: 401 }
-  // );
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    studentId = payload.roomId;
+    role = payload.role;
+  } catch {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Invalid token",
+      },
+      { status: 401 }
+    );
+  }
 
   readDB();
 
-  // return NextResponse.json(
-  //   {
-  //     ok: false,
-  //     message: "Message is not found",
-  //   },
-  //   { status: 404 }
-  // );
+  const foundIndex = DB.rooms.findIndex((x) => x.roomId === roomId);
+  if (foundIndex === -1) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Message is not found",
+      },
+      { status: 404 }
+    );
+  }
 
   writeDB();
 
-  return NextResponse.json({
-    ok: true,
-    message: "Message has been deleted",
-  });
+  if (role === "SUPER_ADMIN")
+    return NextResponse.json({
+      ok: true,
+      message: "Message has been deleted",
+    });
 };
